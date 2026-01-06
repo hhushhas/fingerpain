@@ -1,0 +1,13 @@
+[Unit]
+Description=FingerPain Typing Analytics Daemon
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/fingerpain-daemon
+Restart=on-failure
+RestartSec=5
+Environment=RUST_LOG=fingerpain=info
+
+[Install]
+WantedBy=default.target

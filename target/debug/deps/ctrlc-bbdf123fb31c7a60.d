@@ -1,0 +1,11 @@
+/Users/macmini/Desktop/Code/fingerpain/target/debug/deps/ctrlc-bbdf123fb31c7a60.d: /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/lib.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/error.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/platform/mod.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/platform/unix/mod.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/signal.rs
+
+/Users/macmini/Desktop/Code/fingerpain/target/debug/deps/libctrlc-bbdf123fb31c7a60.rlib: /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/lib.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/error.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/platform/mod.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/platform/unix/mod.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/signal.rs
+
+/Users/macmini/Desktop/Code/fingerpain/target/debug/deps/libctrlc-bbdf123fb31c7a60.rmeta: /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/lib.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/error.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/platform/mod.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/platform/unix/mod.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/signal.rs
+
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/lib.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/error.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/platform/mod.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/platform/unix/mod.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ctrlc-3.5.1/src/signal.rs:

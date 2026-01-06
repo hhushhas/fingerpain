@@ -1,0 +1,20 @@
+[package]
+name = "fingerpain-tray"
+version.workspace = true
+edition.workspace = true
+description = "System tray/menu bar app for FingerPain"
+
+[[bin]]
+name = "fingerpain-tray"
+path = "src/main.rs"
+
+[dependencies]
+tray-icon = { workspace = true }
+tao = { workspace = true }
+fingerpain-core = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+open = "5"
+image = "0.25"

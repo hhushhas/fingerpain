@@ -1,0 +1,54 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/fingerpain-core",
+    "crates/fingerpain-listener",
+    "crates/fingerpain-daemon",
+    "crates/fingerpain-cli",
+    "crates/fingerpain-tray",
+    "crates/fingerpain-web",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["FingerPain Contributors"]
+license = "MIT"
+repository = "https://github.com/fingerpain/fingerpain"
+description = "Cross-platform typing analytics tracker"
+
+[workspace.dependencies]
+# Core
+tokio = { version = "1", features = ["full"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Keyboard events
+rdev = "0.5"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Web
+axum = "0.7"
+tower-http = { version = "0.5", features = ["fs", "cors"] }
+
+# System tray
+tray-icon = "0.14"
+tao = "0.28"
+
+# Export
+csv = "1"
+
+# Utilities
+directories = "5"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "1"
+anyhow = "1"
+
+# Internal crates
+fingerpain-core = { path = "crates/fingerpain-core" }
+fingerpain-listener = { path = "crates/fingerpain-listener" }

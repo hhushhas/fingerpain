@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FingerPain - Typing Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --accent: #6366f1;
+            --accent-dim: #4f46e5;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .range-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .range-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #333;
+            background: var(--card-bg);
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .range-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .range-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #222;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 0.25rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #222;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .app-list {
+            list-style: none;
+        }
+
+        .app-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .app-item:last-child {
+            border-bottom: none;
+        }
+
+        .app-name {
+            font-weight: 500;
+        }
+
+        .app-stats {
+            text-align: right;
+        }
+
+        .app-chars {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .app-percent {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .peak-list {
+            list-style: none;
+        }
+
+        .peak-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .peak-time {
+            color: var(--text-dim);
+        }
+
+        .peak-chars {
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-dim);
+            padding: 2rem;
+        }
+
+        .error {
+            background: #2d1f1f;
+            border: 1px solid #5c2626;
+            border-radius: 8px;
+            padding: 1rem;
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⌨️ FingerPain</h1>
+            <div class="range-selector">
+                <button class="range-btn active" data-range="today">Today</button>
+                <button class="range-btn" data-range="week">Week</button>
+                <button class="range-btn" data-range="month">Month</button>
+                <button class="range-btn" data-range="year">Year</button>
+                <button class="range-btn" data-range="all">All Time</button>
+            </div>
+        </header>
+
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Characters</div>
+                <div class="stat-value" id="stat-chars">-</div>
+                <div class="stat-subtitle" id="stat-net">net: -</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Words</div>
+                <div class="stat-value" id="stat-words">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Paragraphs</div>
+                <div class="stat-value" id="stat-paragraphs">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Time</div>
+                <div class="stat-value" id="stat-time">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg WPM</div>
+                <div class="stat-value" id="stat-wpm">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Peak WPM</div>
+                <div class="stat-value" id="stat-peak-wpm">-</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Daily Typing Activity</div>
+                <div class="chart-container">
+                    <canvas id="daily-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Top Apps</div>
+                <ul class="app-list" id="app-list">
+                    <li class="loading">Loading...</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Hourly Heatmap</div>
+                <div class="chart-container">
+                    <canvas id="hourly-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Peak Times</div>
+                <ul class="peak-list" id="peak-list">
+                    <li class="loading">Loading...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRange = 'today';
+        let dailyChart = null;
+        let hourlyChart = null;
+
+        // Format numbers
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // Format duration
+        function formatDuration(minutes) {
+            if (minutes >= 60) {
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+            }
+            return `${minutes}m`;
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`/api/stats?range=${currentRange}`);
+                const data = await res.json();
+                const stats = data.stats;
+
+                document.getElementById('stat-chars').textContent = formatNumber(stats.total_chars);
+                document.getElementById('stat-net').textContent = `net: ${stats.net_chars}`;
+                document.getElementById('stat-words').textContent = formatNumber(stats.total_words);
+                document.getElementById('stat-paragraphs').textContent = stats.total_paragraphs;
+                document.getElementById('stat-time').textContent = formatDuration(stats.active_minutes);
+                document.getElementById('stat-wpm').textContent = stats.avg_wpm ? stats.avg_wpm.toFixed(0) : '-';
+                document.getElementById('stat-peak-wpm').textContent = stats.peak_wpm ? stats.peak_wpm.toFixed(0) : '-';
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        // Load apps
+        async function loadApps() {
+            try {
+                const res = await fetch(`/api/apps?range=${currentRange}`);
+                const data = await res.json();
+                const list = document.getElementById('app-list');
+
+                if (data.apps.length === 0) {
+                    list.innerHTML = '<li class="loading">No data yet</li>';
+                    return;
+                }
+
+                list.innerHTML = data.apps.slice(0, 8).map(app => `
+                    <li class="app-item">
+                        <span class="app-name">${app.app_name}</span>
+                        <div class="app-stats">
+                            <div class="app-chars">${formatNumber(app.total_chars)}</div>
+                            <div class="app-percent">${app.percentage.toFixed(1)}%</div>
+                        </div>
+                    </li>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load apps:', err);
+            }
+        }
+
+        // Load peaks
+        async function loadPeaks() {
+            try {
+                const res = await fetch(`/api/peak?range=${currentRange}`);
+                const data = await res.json();
+                const list = document.getElementById('peak-list');
+
+                if (data.peaks.length === 0) {
+                    list.innerHTML = '<li class="loading">No data yet</li>';
+                    return;
+                }
+
+                list.innerHTML = data.peaks.slice(0, 8).map(peak => {
+                    const date = new Date(peak.timestamp);
+                    const timeStr = date.toLocaleString();
+                    return `
+                        <li class="peak-item">
+                            <span class="peak-time">${timeStr}</span>
+                            <span class="peak-chars">${peak.char_count} chars</span>
+                        </li>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Failed to load peaks:', err);
+            }
+        }
+
+        // Load daily chart
+        async function loadDailyChart() {
+            try {
+                const rangeMap = {
+                    'today': '7d',
+                    'week': '7d',
+                    'month': '30d',
+                    'year': '90d',
+                    'all': '90d'
+                };
+                const chartRange = rangeMap[currentRange] || '30d';
+
+                const res = await fetch(`/api/daily?range=${chartRange}`);
+                const data = await res.json();
+
+                const ctx = document.getElementById('daily-chart').getContext('2d');
+
+                if (dailyChart) {
+                    dailyChart.destroy();
+                }
+
+                dailyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.data.map(d => d.date),
+                        datasets: [{
+                            label: 'Characters',
+                            data: data.data.map(d => d.chars),
+                            backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                            borderColor: 'rgb(99, 102, 241)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: { color: '#222' },
+                                ticks: { color: '#888' }
+                            },
+                            y: {
+                                grid: { color: '#222' },
+                                ticks: { color: '#888' }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error('Failed to load daily chart:', err);
+            }
+        }
+
+        // Load hourly chart
+        async function loadHourlyChart() {
+            try {
+                const res = await fetch(`/api/hourly?range=${currentRange}`);
+                const data = await res.json();
+
+                const ctx = document.getElementById('hourly-chart').getContext('2d');
+
+                // Create heatmap data (24 hours)
+                const hourlyData = new Array(24).fill(0);
+                data.hourly.forEach(h => {
+                    hourlyData[h.hour] += h.avg_chars;
+                });
+
+                if (hourlyChart) {
+                    hourlyChart.destroy();
+                }
+
+                hourlyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                        datasets: [{
+                            label: 'Avg Characters',
+                            data: hourlyData,
+                            backgroundColor: hourlyData.map(v => {
+                                const max = Math.max(...hourlyData);
+                                const intensity = max > 0 ? v / max : 0;
+                                return `rgba(99, 102, 241, ${0.2 + intensity * 0.8})`;
+                            }),
+                            borderColor: 'rgb(99, 102, 241)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: { color: '#222' },
+                                ticks: { color: '#888' }
+                            },
+                            y: {
+                                grid: { color: '#222' },
+                                ticks: { color: '#888' }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error('Failed to load hourly chart:', err);
+            }
+        }
+
+        // Load all data
+        function loadAll() {
+            loadStats();
+            loadApps();
+            loadPeaks();
+            loadDailyChart();
+            loadHourlyChart();
+        }
+
+        // Range button handlers
+        document.querySelectorAll('.range-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentRange = btn.dataset.range;
+                loadAll();
+            });
+        });
+
+        // Initial load
+        loadAll();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadAll, 30000);
+    </script>
+</body>
+</html>

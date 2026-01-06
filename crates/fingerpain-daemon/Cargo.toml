@@ -1,0 +1,18 @@
+[package]
+name = "fingerpain-daemon"
+version.workspace = true
+edition.workspace = true
+description = "Background daemon for FingerPain"
+
+[[bin]]
+name = "fingerpain-daemon"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true }
+fingerpain-core = { workspace = true }
+fingerpain-listener = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+ctrlc = "3"

@@ -1,0 +1,15 @@
+[package]
+name = "fingerpain-core"
+version.workspace = true
+edition.workspace = true
+description = "Core library for FingerPain - storage, metrics, and export"
+
+[dependencies]
+rusqlite = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+csv = { workspace = true }
+directories = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }

@@ -1,0 +1,12 @@
+/Users/macmini/Desktop/Code/fingerpain/target/release/deps/cocoa-f8c098a025897f42.d: /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/lib.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/appkit.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/base.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/foundation.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/quartzcore.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/macros.rs
+
+/Users/macmini/Desktop/Code/fingerpain/target/release/deps/libcocoa-f8c098a025897f42.rlib: /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/lib.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/appkit.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/base.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/foundation.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/quartzcore.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/macros.rs
+
+/Users/macmini/Desktop/Code/fingerpain/target/release/deps/libcocoa-f8c098a025897f42.rmeta: /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/lib.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/appkit.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/base.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/foundation.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/quartzcore.rs /Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/macros.rs
+
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/lib.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/appkit.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/base.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/foundation.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/quartzcore.rs:
+/Users/macmini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cocoa-0.22.0/src/macros.rs:
