@@ -27,6 +27,8 @@ pub struct KeystrokeRecord {
     pub word_count: u32,
     pub paragraph_count: u32,
     pub backspace_count: u32,
+    pub browser_domain: Option<String>,
+    pub browser_url: Option<String>,
 }
 
 impl KeystrokeRecord {
@@ -40,6 +42,8 @@ impl KeystrokeRecord {
             word_count: 0,
             paragraph_count: 0,
             backspace_count: 0,
+            browser_domain: None,
+            browser_url: None,
         }
     }
 
@@ -99,6 +103,25 @@ pub struct AppStats {
     pub total_chars: u64,
     pub total_words: u64,
     pub percentage: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub browser_domains: Option<Vec<DomainStats>>,
+}
+
+/// Domain statistics within a browser
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DomainStats {
+    pub domain: String,
+    pub total_chars: u64,
+    pub total_words: u64,
+    pub percentage: f64,
+}
+
+/// Browser context from active tab
+#[derive(Debug, Clone)]
+pub struct BrowserContext {
+    pub domain: String,
+    pub url: String,
+    pub title: String,
 }
 
 /// Hourly breakdown for heatmap

@@ -9,6 +9,7 @@ Cross-platform typing analytics tracker. Counts keystrokes without capturing con
 | Privacy-first | Tracks counts only, never actual keystrokes |
 | Per-minute data | Aggregate by minute, hour, day, week, month, year |
 | Per-app stats | See which apps you type in most |
+| Browser tracking | Track domains (x.com, chatgpt.com, etc.) with Helium/Chrome extension |
 | WPM tracking | Average and peak words-per-minute |
 | Export | CSV and JSON formats |
 | Multi-interface | CLI, web dashboard, menu bar tray |
@@ -50,6 +51,39 @@ fingerpain today
 fingerpain-web
 # Open http://127.0.0.1:7890
 ```
+
+## Browser Extension (Helium + Chrome)
+
+Track typing on specific websites (x.com, chatgpt.com, etc.) with the Chromium extension.
+
+**Setup:**
+```bash
+# Create placeholder icons (first time only)
+convert -size 16x16 xc:#FF6B6B extension/icons/icon-16.png
+convert -size 48x48 xc:#FF6B6B extension/icons/icon-48.png
+convert -size 128x128 xc:#FF6B6B extension/icons/icon-128.png
+
+# Load extension:
+# 1. Open chrome://extensions (or helium://extensions)
+# 2. Enable "Developer mode"
+# 3. Click "Load unpacked" and select the "extension/" folder
+
+# Start services and test:
+cargo run --bin fingerpain-daemon &
+cargo run --bin fingerpain-web &
+
+# Type on different domains, wait 1 minute, then:
+cargo run --bin fingerpain -- apps
+```
+
+**Display format:**
+```
+Helium              1,234      500    45.2%
+  → x.com             800      320    64.8%
+  → chatgpt.com       434      180    35.2%
+```
+
+See `extension/README.md` for detailed setup and troubleshooting.
 
 ## Architecture
 

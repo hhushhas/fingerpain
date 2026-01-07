@@ -2,11 +2,12 @@
 //!
 //! Handles all SQLite operations including schema creation, inserts, and queries.
 
-use crate::{AggregatedStats, AppStats, HourlyStats, KeystrokeRecord, PeakInfo, TypingSession};
+use crate::{AggregatedStats, AppStats, BrowserContext, DomainStats, HourlyStats, KeystrokeRecord, PeakInfo, TypingSession};
 use chrono::{DateTime, TimeZone, Utc};
 use rusqlite::{params, Connection, Result as SqliteResult};
 use std::path::Path;
 use thiserror::Error;
+use tracing::info;
 
 #[derive(Error, Debug)]
 pub enum DbError {
@@ -89,7 +90,75 @@ impl Database {
             );
             "#,
         )?;
+
+        // Run migrations
+        self.migrate_v1_browser_tracking()?;
+
         Ok(())
+    }
+
+    /// Migrate to browser tracking (v1)
+    fn migrate_v1_browser_tracking(&self) -> Result<()> {
+        // Check if browser_context table exists
+        let table_exists: bool = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='browser_context'",
+                [],
+                |row| row.get::<_, i64>(0).map(|count| count > 0),
+            )
+            .unwrap_or(false);
+
+        if !table_exists {
+            info!("Running migration: browser tracking v1");
+
+            self.conn.execute_batch(
+                r#"
+                CREATE TABLE browser_context (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp INTEGER NOT NULL,
+                    browser_name TEXT NOT NULL,
+                    url TEXT,
+                    domain TEXT,
+                    page_title TEXT,
+                    last_updated INTEGER NOT NULL,
+                    UNIQUE(browser_name)
+                );
+
+                CREATE INDEX idx_browser_context_browser ON browser_context(browser_name);
+                CREATE INDEX idx_browser_context_updated ON browser_context(last_updated);
+                "#,
+            )?;
+        }
+
+        // Add browser columns to keystrokes table if they don't exist
+        if !self.column_exists("keystrokes", "browser_domain")? {
+            self.conn
+                .execute("ALTER TABLE keystrokes ADD COLUMN browser_domain TEXT", [])?;
+            self.conn
+                .execute("ALTER TABLE keystrokes ADD COLUMN browser_url TEXT", [])?;
+        }
+
+        Ok(())
+    }
+
+    /// Check if a column exists in a table
+    fn column_exists(&self, table: &str, column: &str) -> Result<bool> {
+        let mut stmt = self
+            .conn
+            .prepare(&format!("PRAGMA table_info({})", table))?;
+        let rows = stmt.query_map([], |row| {
+            let col_name: String = row.get(1)?;
+            Ok(col_name)
+        })?;
+
+        for row in rows {
+            if row? == column {
+                return Ok(true);
+            }
+        }
+
+        Ok(false)
     }
 
     /// Insert or update a keystroke record for the current minute
@@ -99,13 +168,15 @@ impl Database {
 
         self.conn.execute(
             r#"
-            INSERT INTO keystrokes (timestamp, app_name, app_bundle_id, char_count, word_count, paragraph_count, backspace_count)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+            INSERT INTO keystrokes (timestamp, app_name, app_bundle_id, char_count, word_count, paragraph_count, backspace_count, browser_domain, browser_url)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
             ON CONFLICT(timestamp, app_bundle_id) DO UPDATE SET
                 char_count = char_count + excluded.char_count,
                 word_count = word_count + excluded.word_count,
                 paragraph_count = paragraph_count + excluded.paragraph_count,
-                backspace_count = backspace_count + excluded.backspace_count
+                backspace_count = backspace_count + excluded.backspace_count,
+                browser_domain = COALESCE(excluded.browser_domain, browser_domain),
+                browser_url = COALESCE(excluded.browser_url, browser_url)
             "#,
             params![
                 minute_timestamp,
@@ -115,6 +186,8 @@ impl Database {
                 record.word_count,
                 record.paragraph_count,
                 record.backspace_count,
+                record.browser_domain,
+                record.browser_url,
             ],
         )?;
 
@@ -264,6 +337,7 @@ impl Database {
                 total_chars: chars as u64,
                 total_words: row.get::<_, i64>(3)? as u64,
                 percentage: (chars as f64 / total as f64) * 100.0,
+                browser_domains: None,
             })
         })?;
 
@@ -391,7 +465,7 @@ impl Database {
 
         let mut stmt = self.conn.prepare(
             r#"
-            SELECT id, timestamp, app_name, app_bundle_id, char_count, word_count, paragraph_count, backspace_count
+            SELECT id, timestamp, app_name, app_bundle_id, char_count, word_count, paragraph_count, backspace_count, browser_domain, browser_url
             FROM keystrokes
             WHERE timestamp >= ?1 AND timestamp < ?2
             ORDER BY timestamp
@@ -409,6 +483,113 @@ impl Database {
                 word_count: row.get::<_, i64>(5)? as u32,
                 paragraph_count: row.get::<_, i64>(6)? as u32,
                 backspace_count: row.get::<_, i64>(7)? as u32,
+                browser_domain: row.get(8)?,
+                browser_url: row.get(9)?,
+            })
+        })?;
+
+        rows.collect::<SqliteResult<Vec<_>>>().map_err(DbError::from)
+    }
+
+    /// Upsert browser context
+    pub fn upsert_browser_context(
+        &self,
+        browser_name: &str,
+        url: &str,
+        domain: &str,
+        title: &str,
+    ) -> Result<()> {
+        let now = Utc::now().timestamp();
+
+        self.conn.execute(
+            r#"
+            INSERT INTO browser_context (browser_name, url, domain, page_title, timestamp, last_updated)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+            ON CONFLICT(browser_name) DO UPDATE SET
+                url = excluded.url,
+                domain = excluded.domain,
+                page_title = excluded.page_title,
+                last_updated = excluded.last_updated
+            "#,
+            params![browser_name, url, domain, title, now, now],
+        )?;
+
+        Ok(())
+    }
+
+    /// Get browser context for a specific browser bundle ID
+    pub fn get_browser_context(&self, bundle_id: &str) -> Result<Option<BrowserContext>> {
+        // Map bundle ID to browser name
+        let browser_name = match bundle_id {
+            "com.JadeApps.Helium" => "Helium",
+            "com.google.Chrome" => "Chrome",
+            "org.mozilla.firefox" => "Firefox",
+            "com.apple.Safari" => "Safari",
+            _ => return Ok(None),
+        };
+
+        let mut stmt = self.conn.prepare(
+            r#"
+            SELECT domain, url, page_title, last_updated
+            FROM browser_context
+            WHERE browser_name = ?1
+            LIMIT 1
+            "#,
+        )?;
+
+        let result = stmt.query_row(params![browser_name], |row| {
+            Ok(BrowserContext {
+                domain: row.get(0)?,
+                url: row.get(1)?,
+                title: row.get(2)?,
+            })
+        });
+
+        match result {
+            Ok(ctx) => Ok(Some(ctx)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(DbError::from(e)),
+        }
+    }
+
+    /// Get domain statistics for a browser within a time range
+    pub fn get_browser_domains(
+        &self,
+        bundle_id: &str,
+        start: DateTime<Utc>,
+        end: DateTime<Utc>,
+        browser_total: u64,
+    ) -> Result<Vec<DomainStats>> {
+        let start_ts = start.timestamp();
+        let end_ts = end.timestamp();
+
+        let mut stmt = self.conn.prepare(
+            r#"
+            SELECT
+                COALESCE(browser_domain, 'Other') as domain,
+                SUM(char_count) as total_chars,
+                SUM(word_count) as total_words
+            FROM keystrokes
+            WHERE app_bundle_id = ?1
+                AND timestamp >= ?2
+                AND timestamp < ?3
+            GROUP BY browser_domain
+            ORDER BY total_chars DESC
+            LIMIT 20
+            "#,
+        )?;
+
+        let rows = stmt.query_map(params![bundle_id, start_ts, end_ts], |row| {
+            let chars: i64 = row.get(1)?;
+            Ok(DomainStats {
+                domain: row.get(0)?,
+                total_chars: chars as u64,
+                total_words: row.get::<_, i64>(2)? as u64,
+                percentage: if browser_total > 0 {
+                    (chars as f64 / browser_total as f64) * 100.0
+                } else {
+                    0.0
+                },
             })
         })?;
 
@@ -473,6 +654,8 @@ mod tests {
             word_count: 20,
             paragraph_count: 2,
             backspace_count: 5,
+            browser_domain: None,
+            browser_url: None,
         };
 
         let id = db.upsert_keystroke(&record).unwrap();

@@ -7,7 +7,7 @@ use axum::{
     extract::{Query, State},
     http::StatusCode,
     response::{Html, Json},
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use fingerpain_core::{
@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use tower_http::cors::CorsLayer;
 use tracing::info;
+use url::Url;
 
 #[derive(Clone)]
 struct AppState {
@@ -43,6 +44,7 @@ async fn main() -> Result<()> {
         .route("/api/hourly", get(hourly_handler))
         .route("/api/peak", get(peak_handler))
         .route("/api/daily", get(daily_handler))
+        .route("/api/browser-context", post(browser_context_handler))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
@@ -156,6 +158,20 @@ struct DailyResponse {
     data: Vec<DailyDataPoint>,
 }
 
+#[derive(Deserialize)]
+struct BrowserContextRequest {
+    url: String,
+    title: String,
+    browser_name: String,
+    timestamp: i64,
+}
+
+#[derive(Serialize)]
+struct BrowserContextResponse {
+    success: bool,
+    message: String,
+}
+
 async fn daily_handler(
     State(state): State<AppState>,
     Query(query): Query<RangeQuery>,
@@ -177,4 +193,26 @@ async fn daily_handler(
         .collect();
 
     Ok(Json(DailyResponse { data }))
+}
+
+async fn browser_context_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<BrowserContextRequest>,
+) -> Result<Json<BrowserContextResponse>, StatusCode> {
+    // Extract domain from URL
+    let domain = match Url::parse(&payload.url) {
+        Ok(url) => url.host_str().unwrap_or("unknown").to_string(),
+        Err(_) => "unknown".to_string(),
+    };
+
+    let db = state.db.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Upsert browser context
+    db.upsert_browser_context(&payload.browser_name, &payload.url, &domain, &payload.title)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(BrowserContextResponse {
+        success: true,
+        message: "Context updated".to_string(),
+    }))
 }
